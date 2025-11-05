@@ -164,6 +164,7 @@ const ResponsiveImageSlider = () => {
           background-color: #111;
           border-radius: 8px; /* Optional: adds a slight curve to the corners */
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+          margin-top: 15px;
         }
 
         .slider-images {
@@ -203,13 +204,13 @@ const ResponsiveImageSlider = () => {
         }
 
         .slider-arrow:hover {
-          background-color: rgba(255, 255, 255, 0.1);
+          background-color: black;
         }
 
         .slider-arrow svg {
           width: 2.5rem;
           height: 2.5rem;
-          fill: #ccc; /* A slightly softer white */
+          fill: rgba(0,0,0,0.7); /* A slightly softer white */
           transition: fill 0.3s ease;
         }
 
