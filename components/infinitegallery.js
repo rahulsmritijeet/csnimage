@@ -9,7 +9,7 @@ const AUTOPLAY_INTERVAL = 4000; // 4 seconds
 const INACTIVITY_TIMEOUT = 5000; // 5 seconds
 
 // --- Component ---
-const infinitegallery = () => {
+const ResponsiveImageSlider = () => {
   // Generate the list of image URLs based on the total count.
   const imageUrls = Array.from(
     { length: TOTAL_IMAGES },
@@ -20,8 +20,8 @@ const infinitegallery = () => {
   const [isAutoplaying, setIsAutoplaying] = useState(true);
 
   // Refs to hold timer IDs, allowing us to clear them.
-  const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoplayIntervalRef = useRef(null);
+  const inactivityTimeoutRef = useRef(null);
 
   // --- Core Navigation Logic ---
   const goToNext = useCallback(() => {
@@ -230,4 +230,4 @@ const infinitegallery = () => {
   );
 };
 
-export default infinitegallery;
+export default ResponsiveImageSlider;
