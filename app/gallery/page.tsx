@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import InfiniteGallery from "@/components/infinitegallery";
+import ResponsiveImageSlider from "@/components/ResponsiveImageSlider";
 
 declare global {
   interface Window {
@@ -116,7 +116,7 @@ const Events: React.FC = () => {
 
   return (
     <div className="gallery-container">
-      <InfiniteGallery />
+      <ResponsiveImageSlider />
     </div>
   );
 };
