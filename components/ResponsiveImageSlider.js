@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
 // --- Configuration ---
-// Easily change the number of images or the autoplay interval here.
 const TOTAL_IMAGES = 18;
 const AUTOPLAY_INTERVAL = 4000; // 4 seconds
 const INACTIVITY_TIMEOUT = 5000; // 5 seconds
 
 // --- Component ---
 const ResponsiveImageSlider = () => {
-  // Generate the list of image URLs based on the total count.
+  // Generate the list of image URLs
   const imageUrls = Array.from(
     { length: TOTAL_IMAGES },
     (_, i) => `images/gallery/${i + 1}.jpg`
@@ -19,7 +18,7 @@ const ResponsiveImageSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoplaying, setIsAutoplaying] = useState(true);
 
-  // Refs to hold timer IDs, allowing us to clear them.
+  // Refs for timers
   const autoplayIntervalRef = useRef(null);
   const inactivityTimeoutRef = useRef(null);
 
@@ -33,41 +32,32 @@ const ResponsiveImageSlider = () => {
       (prevIndex) => (prevIndex - 1 + TOTAL_IMAGES) % TOTAL_IMAGES
     );
   };
+  
+  const goToIndex = (index) => {
+    setCurrentIndex(index);
+  }
 
   // --- Autoplay and Inactivity Logic ---
-
-  // Function to reset the inactivity timer.
-  // This is called whenever the user manually navigates.
   const resetInactivityTimer = () => {
-    // Clear any existing inactivity timer
     if (inactivityTimeoutRef.current) {
       clearTimeout(inactivityTimeoutRef.current);
     }
-    // Set a new timer to resume autoplay after the specified delay
     inactivityTimeoutRef.current = setTimeout(() => {
       setIsAutoplaying(true);
     }, INACTIVITY_TIMEOUT);
   };
 
-  // Main effect to handle the autoplay interval.
   useEffect(() => {
-    // If autoplay is enabled, set up the interval.
     if (isAutoplaying) {
-      // Clear any existing interval to prevent duplicates.
       if (autoplayIntervalRef.current) {
         clearInterval(autoplayIntervalRef.current);
       }
-      // Start a new interval to advance to the next slide.
       autoplayIntervalRef.current = setInterval(goToNext, AUTOPLAY_INTERVAL);
     } else {
-      // If autoplay is disabled (due to user interaction), clear the interval.
       if (autoplayIntervalRef.current) {
         clearInterval(autoplayIntervalRef.current);
       }
     }
-
-    // Cleanup function: This runs when the component unmounts or dependencies change.
-    // It's crucial for preventing memory leaks.
     return () => {
       if (autoplayIntervalRef.current) {
         clearInterval(autoplayIntervalRef.current);
@@ -76,41 +66,26 @@ const ResponsiveImageSlider = () => {
         clearTimeout(inactivityTimeoutRef.current);
       }
     };
-  }, [isAutoplaying, goToNext]); // Rerun this effect if isAutoplaying or goToNext changes.
+  }, [isAutoplaying, goToNext]);
 
   // --- User Interaction Handlers ---
-
-  const handleNextClick = () => {
-    setIsAutoplaying(false); // Pause autoplay
-    goToNext();
-    resetInactivityTimer(); // Reset the timer to resume autoplay later
+  const handleUserInteraction = (action) => {
+    setIsAutoplaying(false);
+    action();
+    resetInactivityTimer();
   };
+  
+  const handleNextClick = () => handleUserInteraction(goToNext);
+  const handlePrevClick = () => handleUserInteraction(goToPrev);
+  const handleDotClick = (index) => handleUserInteraction(() => goToIndex(index));
 
-  const handlePrevClick = () => {
-    setIsAutoplaying(false); // Pause autoplay
-    goToPrev();
-    resetInactivityTimer(); // Reset the timer to resume autoplay later
-  };
 
   return (
     <>
-      <div className="slider-container">
-        <div className="slider-images">
-          {imageUrls.map((url, index) => (
-            <div
-              key={url}
-              className={`slider-image ${
-                index === currentIndex ? "active" : ""
-              }`}
-              style={{ backgroundImage: `url(${url})` }}
-              aria-hidden={index !== currentIndex}
-            />
-          ))}
-        </div>
-
+      <div className="slider-wrapper">
         {/* Left Arrow */}
         <button
-          className="slider-arrow left"
+          className="slider-arrow side"
           onClick={handlePrevClick}
           aria-label="Previous image"
         >
@@ -123,9 +98,38 @@ const ResponsiveImageSlider = () => {
           </svg>
         </button>
 
+        <div className="slider-container">
+          <div className="slider-images">
+            {imageUrls.map((url, index) => (
+              <div
+                key={url}
+                className={`slider-image ${
+                  index === currentIndex ? "active" : ""
+                }`}
+                style={{ backgroundImage: `url(${url})` }}
+                aria-hidden={index !== currentIndex}
+              />
+            ))}
+          </div>
+
+          {/* Navigation Dots */}
+          <div className="slider-dots-nav">
+            {imageUrls.map((_, index) => (
+              <button
+                key={index}
+                className={`slider-dot ${
+                  index === currentIndex ? "active" : ""
+                }`}
+                onClick={() => handleDotClick(index)}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
         {/* Right Arrow */}
         <button
-          className="slider-arrow right"
+          className="slider-arrow side"
           onClick={handleNextClick}
           aria-label="Next image"
         >
@@ -139,17 +143,27 @@ const ResponsiveImageSlider = () => {
         </button>
       </div>
 
-      {/* --- Styles ---
-          Using JSX-scoped CSS for a self-contained component.
-          This can be moved to a separate .css file if preferred.
-      */}
       <style jsx>{`
+        /* This new wrapper centers the entire slider component and places the arrows */
+        .slider-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          min-height: 90vh; /* Use min-height to ensure it's centered even on tall screens */
+          gap: 1.5rem; /* Space between arrows and slider */
+        }
+      
+        /* The main container for the images and dots */
         .slider-container {
           position: relative;
-          width: 100%;
-          height: 100vh; /* Full viewport height for a cinematic feel */
+          width: 85vw; /* 85% of the viewport width */
+          max-width: 1400px; /* Optional: cap the max width on very large screens */
+          aspect-ratio: 16 / 9; /* Enforces a cinematic 16:9 ratio */
           overflow: hidden;
-          background-color: #000; /* Fallback for when images are loading */
+          background-color: #111;
+          border-radius: 8px; /* Optional: adds a slight curve to the corners */
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .slider-images {
@@ -167,62 +181,94 @@ const ResponsiveImageSlider = () => {
           background-size: cover;
           background-position: center;
           opacity: 0;
-          /* This is where the magic happens: smooth opacity fade with easing */
-          transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth easing */
+          transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .slider-image.active {
           opacity: 1;
         }
 
+        /* Styles for the navigation arrows */
         .slider-arrow {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 10;
-          background-color: rgba(0, 0, 0, 0.3);
+          background-color: transparent;
           border: none;
-          border-radius: 50%;
           cursor: pointer;
           padding: 1rem;
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 50%;
           transition: background-color 0.3s ease;
+          z-index: 10;
         }
 
         .slider-arrow:hover {
-          background-color: rgba(0, 0, 0, 0.6);
-        }
-
-        .slider-arrow.left {
-          left: 2rem;
-        }
-
-        .slider-arrow.right {
-          right: 2rem;
+          background-color: rgba(255, 255, 255, 0.1);
         }
 
         .slider-arrow svg {
-          width: 2rem;
-          height: 2rem;
-          fill: white;
+          width: 2.5rem;
+          height: 2.5rem;
+          fill: #ccc; /* A slightly softer white */
+          transition: fill 0.3s ease;
         }
 
-        /* Responsive adjustments for smaller screens */
+        .slider-arrow:hover svg {
+          fill: #fff;
+        }
+
+        /* Container for the navigation dots */
+        .slider-dots-nav {
+          position: absolute;
+          bottom: 1.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 0.75rem;
+          z-index: 10;
+        }
+
+        .slider-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background-color: rgba(255, 255, 255, 0.4);
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .slider-dot:hover {
+          background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .slider-dot.active {
+          background-color: #ffffff;
+          transform: scale(1.2);
+        }
+
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-          .slider-arrow {
-            padding: 0.75rem;
+          .slider-wrapper {
+            /* On mobile, reduce the gap to save space */
+            gap: 0.5rem;
           }
-          .slider-arrow.left {
-            left: 1rem;
-          }
-          .slider-arrow.right {
-            right: 1rem;
+          .slider-container {
+             /* Use more of the screen width on smaller devices */
+            width: 95vw;
           }
           .slider-arrow svg {
-            width: 1.5rem;
-            height: 1.5rem;
+            width: 1.75rem;
+            height: 1.75rem;
+          }
+          .slider-dots-nav {
+            bottom: 1rem;
+            gap: 0.5rem;
+          }
+          .slider-dot {
+            width: 8px;
+            height: 8px;
           }
         }
       `}</style>
